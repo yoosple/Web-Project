@@ -3,7 +3,7 @@
     <nav v-bind:class="active" v-on:click.prevent>
       <a href="#" class="dashboad" v-on:click="makeActive('dashboad')">대시보드</a>
       <a href="#" class="eagle" v-on:click="makeActive('eagle')">움직이는 공 맞추기</a>
-      <a href="#" class="dance" v-on:click="makeActive('dance')">리듬게임</a>
+      <a href="#" class="dance" v-on:click="makeActive('dance')">화살표 방향 누르기</a>
       <a href="#" class="treasure" v-on:click="makeActive('treasure')">보물받기</a>
       <a href="#" class="dragon" v-on:click="makeActive('dragon')">드래곤 알 차지</a>
       <a href="#" class="seed" v-on:click="makeActive('seed')">시드맵</a>
