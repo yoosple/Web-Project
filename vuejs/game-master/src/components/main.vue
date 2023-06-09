@@ -2,42 +2,27 @@
   <div id="main">
     <nav v-bind:class="active" v-on:click.prevent>
       <a href="#" class="dashboad" v-on:click="makeActive('dashboad')">대시보드</a>
-      <a href="#" class="eagle" v-on:click="makeActive('eagle')">움직이는 공 맞추기</a>
-      <a href="#" class="dance" v-on:click="makeActive('dance')">화살표 방향 누르기</a>
-      <a href="#" class="treasure" v-on:click="makeActive('treasure')">보물받기</a>
-      <a href="#" class="dragon" v-on:click="makeActive('dragon')">드래곤 알 차지</a>
-      <a href="#" class="seed" v-on:click="makeActive('seed')">시드맵</a>
+      <a href="#" class="maplestory" v-on:click="makeActive('maplestory')">메이플스토리 게임들</a>
+      <a href="#" class="others" v-on:click="makeActive('others')">기타 게임들</a>
     </nav>     
     
     <div v-if="active == 'dashboad'">
       <Dashboad />
     </div>
-     <div v-else-if="active == 'eagle'">
-      <Eagle />
-    </div>
-     <div v-else-if="active == 'dance'">
-      <Dance />
-    </div>
-     <div v-else-if="active == 'treasure'">
-      <Treasure />
-    </div>
-     <div v-else-if="active == 'dragon'">
-      <Dragon />
+    <div v-else-if="active == 'maplestory'">
+      <Maplestory />
     </div>
      <div v-else>
-      <Seed />
+      <Others />
     </div>
     <router-view></router-view>
   </div>
 </template>
 
 <script>
-import Dashboad from './menus/DashboadPage.vue'
-import Eagle from './menus/EaglePage.vue'
-import Dance from './menus/DancePage.vue'
-import Treasure from './menus/TreasurePage.vue'
-import Dragon from './menus/DragonPage.vue'
-import Seed from './menus/SeedPage.vue'
+import Dashboad from './menus/dashboard.vue'
+import Maplestory from './menus/maplestory.vue'
+import Others from './menus/others.vue'
 
 export default {
   el: '#main',
@@ -47,7 +32,7 @@ export default {
     }
   },
   components: {
-    Dashboad, Eagle, Dance, Treasure, Dragon, Seed
+    Dashboad, Maplestory, Others
   },
   methods: {
     makeActive: function(item){
@@ -120,11 +105,8 @@ nav a:last-child{
 }
 
 nav.dashboad .dashboad,
-nav.eagle .eagle,
-nav.dance .dance,
-nav.treasure .treasure,
-nav.dragon .dragon,
-nav.seed .seed{
+nav.maplestory .maplestory,
+nav.others .others{
   background-color:#e35885;
 }
 
