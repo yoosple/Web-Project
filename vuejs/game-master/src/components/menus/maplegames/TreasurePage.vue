@@ -1,12 +1,16 @@
 <template>
-     <div class="game" tabindex="0" @keydown="handleKeyDown" @keyup="handleKeyUp">
-          <div class="canvas-container">
-               <canvas ref="canvas" width="400" height="400"></canvas>
-               <div class="basket" :style="{ bottom: '0', left: basket.x + 'px' }"></div>               
-               <div v-if="remainingTime === 0" class="overlay"></div>
+     <div class="game-board">
+          <div class="container">
+               <div v-for="(object, index) in objects" :key="index" class="object" :style="{ top: object.top + 'px' }"></div>
           </div>
-          <p>Score: {{ score }}</p>
-          <p>Time: {{ remainingTime }} 초 남음</p>
+          <div class="score-board">Score: {{ score }}</div>
+          <div class="timer">Time: {{ remainingTime }}</div>
+          <div v-if="!isGameStarted || isGameCleared || isGameOver" class="overlay"></div>
+          <div v-if="!isGameStarted" class="game-start">
+               <button class="start-button" @click="startGame">Start</button>
+          </div>
+          <div v-if="isGameCleared" class="game-cleared">게임 클리어!</div>
+          <div v-if="isGameOver" class="game-over">게임 오버!</div>
      </div>
 </template>
    
@@ -14,196 +18,177 @@
 export default {
      data() {
           return {
-               canvas: null,
-               ctx: null,
-               width: 0,
-               height: 0,
-               basket: {
-                    x: 0,
-                    width: 100,
-                    height: 20,
-               },
-               jewels: [],
+               objects: [], // 물체들을 관리하는 배열
+               containerHeight: 0, // 컨테이너(div)의 높이
                score: 0,
-               isMovingLeft: false,
-               isMovingRight: false,
-               gameStarted: false,
-               remainingTime: 30,
-               timer: null,
+               isGameCleared: false,
+               remainingTime: 60,
+               isGameOver: false,
+               isGameStarted: false
           };
      },
-     mounted() {
-          this.canvas = this.$refs.canvas;
-          this.ctx = this.canvas.getContext('2d');
-          this.width = this.canvas.width;
-          this.height = this.canvas.height;
-          this.basket.x = (this.width - this.basket.width) / 2; // Center the basket horizontally
-          this.startGame();
-          this.attachEventListeners();
-     },
-     beforeUnmounted() {
-          this.removeEventListeners();
-          this.stopTimer();
-     },
+     mounted() { },
      methods: {
-          startGame() {
-               this.gameStarted = true;
-               this.score = 0;
-               this.jewels = [];
-               this.remainingTime = 30;
-               this.startTimer();
-               this.createJewels();
-               this.draw();
-          },
-          createJewels() {
-               setInterval(() => {
-                    const jewel = {
-                         x: Math.random() * (this.width - 20),
-                         y: 0,
-                         size: 20,
-                         speed: Math.random() * 2 + 1,
-                         score: Math.random() < 0.5 ? -1 : 1,
+          startAnimation() {
+               const numObjects = 5; // 물체의 개수
+               const animationDuration = 2000; // 애니메이션 지속 시간 (밀리초)
+               const interval = 10; // 위치 업데이트 간격 (밀리초)
+
+               const distanceToFall = this.containerHeight; // 물체가 떨어질 거리 (컨테이너의 높이만큼)
+
+               for (let i = 0; i < numObjects; i++) {
+                    const object = {
+                         top: 0, // 물체의 초기 위치 (위쪽에서부터의 거리)
+                         delay: Math.random() * animationDuration // 물체마다 랜덤한 지연 시간 설정
                     };
-                    this.jewels.push(jewel);
-               }, 1000);
-          },
-          draw() {
-               if (this.remainingTime === 0) {
-                    return;
+                    this.objects.push(object);
                }
 
-               this.ctx.clearRect(0, 0, this.width, this.height);
+               const animationInterval = setInterval(() => {
+                    this.objects.forEach((object, index) => {
+                         const progress = Math.max((Date.now() - object.delay) / animationDuration, 0);
+                         if (progress >= 1) {
+                              // 애니메이션이 완료된 경우 배열에서 해당 물체 제거
+                              this.objects.splice(index, 1);
+                         } else {
+                              object.top = distanceToFall * progress;
+                         }
+                    });
 
-               // Draw basket
-               this.ctx.fillStyle = 'blue';
-               this.ctx.fillRect(this.basket.x, this.height - this.basket.height, this.basket.width, this.basket.height);
-
-               // Draw jewels
-               for (const jewel of this.jewels) {
-                    const jewelColor = jewel.score < 0 ? 'gray' : 'red';
-                    this.ctx.fillStyle = jewelColor;
-                    this.ctx.fillRect(jewel.x, jewel.y, jewel.size, jewel.size);
-                    jewel.y += jewel.speed;
-
-                    // Check collision with basket
-                    if (
-                         jewel.y + jewel.size >= this.height - this.basket.height &&
-                         jewel.x + jewel.size >= this.basket.x &&
-                         jewel.x <= this.basket.x + this.basket.width
-                    ) {
-                         this.score += jewel.score;
-                         this.jewels.splice(this.jewels.indexOf(jewel), 1);
+                    if (this.objects.length === 0) {
+                         clearInterval(animationInterval);
                     }
-
-                    // Remove jewels that fall off the canvas
-                    if (jewel.y > this.height) {
-                         this.jewels.splice(this.jewels.indexOf(jewel), 1);
-                    }
-               }
-
-               requestAnimationFrame(this.draw);
-          },
-          moveBasket() {
-               const speed = 5;
-               if (this.isMovingLeft) {
-                    this.basket.x = Math.max(0, this.basket.x - speed);
-               }
-               if (this.isMovingRight) {
-                    this.basket.x = Math.min(this.width - this.basket.width, this.basket.x + speed);
-               }
-          },
-          handleKeyDown(event) {
-               if (this.remainingTime === 0) {
-                    return;
-               }
-
-               event.preventDefault();
-               if (event.key === 'ArrowLeft') {
-                    this.isMovingLeft = true;
-                    this.moveBasket();
-               } else if (event.key === 'ArrowRight') {
-                    this.isMovingRight = true;
-                    this.moveBasket();
-               } else if (event.key === 'ArrowUp') {
-                    this.moveBasketUp();
-               }
-          },
-          handleKeyUp(event) {
-               if (this.remainingTime === 0) {
-                    return;
-               }
-
-               if (event.key === 'ArrowLeft') {
-                    this.isMovingLeft = false;
-               } else if (event.key === 'ArrowRight') {
-                    this.isMovingRight = false;
-               }
-          },
-          attachEventListeners() {
-               window.addEventListener('keydown', this.handleKeyDown);
-               window.addEventListener('keyup', this.handleKeyUp);
-          },
-          removeEventListeners() {
-               window.removeEventListener('keydown', this.handleKeyDown);
-               window.removeEventListener('keyup', this.handleKeyUp);
+               }, interval);
           },
           startTimer() {
-               this.timer = setInterval(() => {
-                    if (this.remainingTime > 0) {
-                         this.remainingTime--;
-                    } else {
-                         this.stopGame();
+               const countdown = setInterval(() => {
+                    // 게임 클리어 또는 게임 오버 상태확인하고 타이머를 멈추세요.
+                    if (this.isGameCleared || this.isGameOver) {
+                         clearInterval(countdown);
+                         return;
+                    }
+                    this.remainingTime--;
+
+                    if (this.remainingTime <= 0) {
+                         clearInterval(countdown);
+                         this.isGameOver = true;
+                         this.isGameCleared = false;
                     }
                }, 1000);
           },
-          stopTimer() {
-               clearInterval(this.timer);
-          },
-          stopGame() {
-               this.gameStarted = false;
-               this.stopTimer();
-               this.isMovingLeft = false;
-               this.isMovingRight = false;
-               this.jewels = this.jewels.map(jewel => ({ ...jewel, score: jewel.score < 0 ? -1 : 0 }));
+          startGame() {
+               this.isGameStarted = true;
+               this.isGameOver = false;
+               this.isGameCleared = false;
+               this.remainingTime = 60;
+               this.score = 0;
 
-               this.removeEventListeners();
-          },
-     },
+               // 컨테이너의 높이를 설정하기 위해 다음 프레임에서 실행되도록 setTimeout 사용
+               setTimeout(() => {
+                    this.containerHeight = this.$el.querySelector('.container').offsetHeight;
+                    this.startAnimation();
+                    this.startTimer();
+               }, 0);
+          }
+     }
 };
 </script>
 
 <style scoped>
-.canvas-container {
+.game-board {
      position: relative;
-     width: 400px;
-     height: 400px;
-     border: 1px solid #000;
+     width: 800px;
+     height: 600px;
+     border: 1px solid black;
+     margin: 0 auto;
+}
+
+.container {
+     position: relative;
+     width: 800px;
+     height: 600px;
+}
+
+.object {
+     position: absolute;
+     width: 50px;
+     height: 50px;
+     background-color: red;
+}
+
+.score-board {
+     position: absolute;
+     top: 10px;
+     left: 10px;
+     font-size: 24px;
+}
+
+.game-start {
+     position: absolute;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+     z-index: 30;
+}
+
+.start-button {
+     width: 100px;
+     height: 50px;
+     font-size: 24px;
+}
+
+.game-cleared,
+.game-over {
+     position: absolute;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+     font-size: 36px;
+     z-index: 30;
+     background-color: aliceblue;
+}
+
+.timer {
+     position: absolute;
+     top: 10px;
+     right: 10px;
+     font-size: 24px;
 }
 
 .overlay {
-   position: absolute;
-   top: 0;
-   left: 0;
-   width: 100%;
-   height: 100%;
-   background-color: rgba(0, 0, 0, 0.5);
-   z-index: 20;
-}
-
-canvas {
-     border: 1px solid #000;
-}
-
-.game {
-     display: flex;
-     flex-direction: column;
-     align-items: center;
-}
-
-.basket {
      position: absolute;
-     width: 100px;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background-color: rgba(0, 0, 0, 0.5);
+     z-index: 20;
+}
+</style>
+<style>
+/* 동적으로 물체의 크기를 설정하기 위한 CSS */
+.object[data-size="50"] {
+     width: 50px;
+     height: 50px;
+}
+
+.object[data-size="40"] {
+     width: 40px;
+     height: 40px;
+}
+
+.object[data-size="30"] {
+     width: 30px;
+     height: 30px;
+}
+
+.object[data-size="20"] {
+     width: 20px;
      height: 20px;
-     background-color: blue;
+}
+
+.object[data-size="10"] {
+     width: 10px;
+     height: 10px;
 }
 </style>

@@ -1,21 +1,21 @@
 <template>
-   <div>
-      <button v-if="!isGameStarted" @click="startGame" class="start-button">Start</button>
-      <div class="game-board" @click="missClick">
-         <div v-for="(object, index) in objects" :key="index" class="game-object" :style="{
-            width: object.size + 'px',
-            height: object.size + 'px',
-            top: object.y + 'px',
-            left: object.x + 'px',
-            backgroundColor: object.color,
-            display: object.visible ? 'block' : 'none'
-         }" @click.stop="handleClick(object)"></div>
-         <div class="score-board">Score: {{ score }}</div>
-         <div class="timer">Time: {{ remainingTime }}</div>
-         <div v-if="isGameCleared || isGameOver" class="overlay"></div>
-         <div v-if="isGameCleared" class="game-cleared">게임 클리어!</div>
-         <div v-if="isGameOver" class="game-over">게임 오버!</div>
+   <div class="game-board" @click="missClick">
+      <div v-for="(object, index) in objects" :key="index" class="game-object" :style="{
+         width: object.size + 'px',
+         height: object.size + 'px',
+         top: object.y + 'px',
+         left: object.x + 'px',
+         backgroundColor: object.color,
+         display: object.visible ? 'block' : 'none'
+      }" @click.stop="handleClick(object)"></div>
+      <div class="score-board">Score: {{ score }}</div>
+      <div class="timer">Time: {{ remainingTime }}</div>
+      <div v-if="!isGameStarted || isGameCleared || isGameOver" class="overlay"></div>
+      <div v-if="!isGameStarted" class="game-start">
+         <button class="start-button" @click="startGame" >Start</button>
       </div>
+      <div v-if="isGameCleared" class="game-cleared">게임 클리어!</div>
+      <div v-if="isGameOver" class="game-over">게임 오버!</div>
    </div>
 </template>
  
@@ -152,6 +152,20 @@ export default {
    font-size: 24px;
 }
 
+.game-start{
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   z-index: 30;
+}
+
+.start-button {
+   width: 100px;
+   height: 50px;
+   font-size: 24px;
+}
+
 .game-cleared,
 .game-over {
    position: absolute;
@@ -168,15 +182,6 @@ export default {
    top: 10px;
    right: 10px;
    font-size: 24px;
-}
-
-.start-button {
-   position: absolute;
-   top: 50%;
-   left: 50%;
-   transform: translate(-50%, -50%);
-   font-size: 24px;
-   z-index: 10;
 }
 
 .overlay {
