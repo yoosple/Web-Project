@@ -5,7 +5,6 @@
       <a href="#" class="dance" v-on:click="makeActive('dance')">닭에게 구애댄스</a>
       <a href="#" class="treasure" v-on:click="makeActive('treasure')">보물받기</a>
       <a href="#" class="dragon" v-on:click="makeActive('dragon')">드래곤 알 차지</a>
-      <a href="#" class="seed" v-on:click="makeActive('seed')">시드맵</a>
     </nav>
 
     <div v-if="active == 'eagle'">
@@ -32,7 +31,6 @@ import Eagle from './maplegames/EaglePage.vue'
 import Dance from './maplegames/DancePage.vue'
 import Treasure from './maplegames/TreasurePage.vue'
 import Dragon from './maplegames/DragonPage.vue'
-import Seed from './maplegames/SeedPage.vue'
 
 export default {
   el: '#main',
